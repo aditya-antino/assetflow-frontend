@@ -151,7 +151,7 @@ export default function AssetDetailsPage() {
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Details</h2>
           <dl className="space-y-3 text-sm">
             <Detail label="Status" value={<StatusBadge status={asset.status} />} />
-            <Detail label="Current Holder" value={asset.currentAssignee?.name ?? "—"} />
+            <Detail label="Current Holder" value={asset.currentAssignee?.name ?? "N/A"} />
             <Detail label="Category" value={asset.category} />
             <Detail label="Manufacturer" value={asset.manufacturer ?? "—"} />
             <Detail label="Model" value={asset.model ?? "—"} />

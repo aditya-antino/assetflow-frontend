@@ -60,6 +60,14 @@ export function dueLabel(value: string | null | undefined): string {
   return `${days} day${days === 1 ? "" : "s"}`;
 }
 
+export function formatStatusLabel(status: string): string {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function toInputDate(value: string | null | undefined): string {
   if (!value) return "";
   return new Date(value).toISOString().slice(0, 10);

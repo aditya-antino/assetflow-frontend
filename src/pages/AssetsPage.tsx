@@ -8,7 +8,8 @@ import Spinner from "../components/Spinner";
 import EmptyState from "../components/EmptyState";
 import StatusBadge from "../components/StatusBadge";
 import AddAssetsModal from "../components/AddAssetsModal";
-import { formatDate } from "../utils/format";
+import Select from "../components/Select";
+import { formatDate, formatStatusLabel } from "../utils/format";
 
 const STATUSES = ["AVAILABLE", "ASSIGNED", "UNDER_REPAIR", "RETIRED"];
 const CATEGORIES = ["Laptop", "Monitor", "Phone", "Tablet", "Accessory", "Other"];
@@ -79,30 +80,22 @@ export default function AssetsPage() {
               className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
             />
           </div>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-          >
+          <Select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All Statuses</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s.replace("_", " ")}
+                {formatStatusLabel(s)}
               </option>
             ))}
-          </select>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-          >
+          </Select>
+          <Select value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">All Categories</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
 
@@ -126,38 +119,75 @@ export default function AssetsPage() {
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Asset Tag</th>
-                <th className="px-4 py-3 font-medium">Asset</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Current Holder</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Expected Return</th>
-                <th className="px-4 py-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {assets.map((asset) => (
-                <tr key={asset.id} className="border-t border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{asset.assetTag}</td>
-                  <td className="px-4 py-3 text-slate-700">{asset.name}</td>
-                  <td className="px-4 py-3 text-slate-500">{asset.category}</td>
-                  <td className="px-4 py-3 text-slate-500">{asset.currentAssignee?.name ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={asset.status} />
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{formatDate(asset.expectedReturnDate)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Link to={`/assets/${asset.id}`} className="text-sm font-medium text-slate-900 hover:underline">
-                      View
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-4 py-3">Asset Tag</th>
+                  <th className="px-4 py-3">Asset</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Current Holder</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Added</th>
+                  <th className="px-4 py-3">Expected Return</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {assets.map((asset) => (
+                  <tr key={asset.id} className="transition-colors hover:bg-slate-50/80">
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold tracking-wide text-slate-700">
+                        {asset.assetTag}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <p className="font-medium text-slate-900">{asset.name}</p>
+                      {(asset.manufacturer || asset.model) && (
+                        <p className="text-xs text-slate-400">
+                          {[asset.manufacturer, asset.model].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200">
+                        {asset.category}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {asset.currentAssignee ? (
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">
+                            {asset.currentAssignee.name.charAt(0).toUpperCase()}
+                          </span>
+                          <span className="text-slate-700">{asset.currentAssignee.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge status={asset.status} />
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-500">
+                      {formatDate(asset.purchaseDate ?? asset.createdAt)}
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-500">
+                      {asset.expectedReturnDate ? formatDate(asset.expectedReturnDate) : "N/A"}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <Link
+                        to={`/assets/${asset.id}`}
+                        className="text-sm font-medium text-slate-900 hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm text-slate-500">
             <span>
