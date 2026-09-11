@@ -31,18 +31,40 @@ function groupByDay(events: AssetEvent[]): Record<string, AssetEvent[]> {
   return groups;
 }
 
+const PAGE_SIZE = 100;
+
 export default function ActivityPage() {
   const [events, setEvents] = useState<AssetEvent[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     activityService
-      .listActivity(1, 100)
-      .then((res) => setEvents(res.data))
+      .listActivity(1, PAGE_SIZE)
+      .then((res) => {
+        setEvents(res.data);
+        setTotal(res.pagination.total);
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  function loadMore() {
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    activityService
+      .listActivity(nextPage, PAGE_SIZE)
+      .then((res) => {
+        setEvents((prev) => [...prev, ...res.data]);
+        setTotal(res.pagination.total);
+        setPage(nextPage);
+      })
+      .finally(() => setLoadingMore(false));
+  }
+
   const groups = groupByDay(events);
+  const hasMore = events.length < total;
 
   return (
     <div>
@@ -74,6 +96,7 @@ export default function ActivityPage() {
                             {event.asset?.assetTag}
                           </Link>
                         </p>
+                        {event.notes && <p className="mt-0.5 text-xs text-slate-400">{event.notes}</p>}
                       </div>
                       <span className="shrink-0 text-xs text-slate-400">{formatDateTime(event.eventDate)}</span>
                     </li>
@@ -82,6 +105,18 @@ export default function ActivityPage() {
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                {loadingMore ? "Loading…" : `Load more (${total - events.length} remaining)`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
